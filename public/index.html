@@ -83,20 +83,37 @@
   <footer>文旅 AI 职业测评系统 · 测评结果仅供职业探索参考</footer>
 
   <script>
-    document.getElementById("startBtn").addEventListener("click", async () => {
-      const status = document.getElementById("status");
-      status.textContent = "正在检查服务器……";
+document.getElementById("startBtn").addEventListener("click", async () => {
+  const status = document.getElementById("status");
+  const button = document.getElementById("startBtn");
 
-      try {
-        const response = await fetch("/api/health");
-        if (!response.ok) throw new Error("服务器响应异常");
+  button.disabled = true;
+  status.textContent = "正在连接 DeepSeek AI，请稍候……";
 
-        const data = await response.json();
-        status.textContent = data.message;
-      } catch (error) {
-        status.textContent = "暂时无法连接服务器，请确认网站已部署。";
-      }
+  try {
+    const response = await fetch("/api/ai-test", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        prompt: "请用简短的中文介绍文旅行业的职业发展方向，并给出三个例子。"
+      })
     });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || "AI 请求失败");
+    }
+
+    status.textContent = data.result;
+  } catch (error) {
+    status.textContent = "测试失败：" + error.message;
+  } finally {
+    button.disabled = false;
+  }
+});
   </script>
 </body>
 </html>

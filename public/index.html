@@ -1,0 +1,102 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="文旅AI职业测评，探索你的职业能力与岗位方向">
+  <title>文旅 AI 职业测评系统</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #f4f7fb;
+      color: #1f2937;
+    }
+    header {
+      padding: 24px 20px;
+      background: #183b56;
+      color: white;
+      text-align: center;
+    }
+    header h1 { margin: 0 0 8px; font-size: 26px; }
+    header p { margin: 0; color: #dbeafe; }
+    main {
+      width: min(720px, 92%);
+      margin: 32px auto;
+      padding: 28px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 28px #1e293b0d;
+    }
+    .tag {
+      display: inline-block;
+      padding: 6px 10px;
+      background: #e8f2ff;
+      color: #245b85;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+    h2 { margin-top: 22px; }
+    li { margin: 12px 0; line-height: 1.7; }
+    button {
+      width: 100%;
+      padding: 14px;
+      border: 0;
+      border-radius: 10px;
+      background: #245b85;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover { background: #183b56; }
+    #status { margin-top: 16px; color: #526273; }
+    footer {
+      text-align: center;
+      color: #718096;
+      font-size: 13px;
+      padding: 0 16px 28px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>文旅 AI 职业测评</h1>
+    <p>探索职业能力，发现适合你的文旅岗位</p>
+  </header>
+
+  <main>
+    <span class="tag">16 道情景题 · 6 大能力维度</span>
+    <h2>欢迎参加职业测评</h2>
+    <p>本系统将根据你的答题情况，分析职业能力表现，并提供文旅岗位匹配建议。</p>
+    <ul>
+      <li>沟通服务、组织协调、应变能力</li>
+      <li>讲解表达、数据分析、学习执行</li>
+      <li>测评完成后生成个人职业分析报告</li>
+    </ul>
+    <button id="startBtn" type="button">检查系统状态</button>
+    <p id="status" role="status">准备就绪，点击按钮检查服务器连接。</p>
+  </main>
+
+  <footer>文旅 AI 职业测评系统 · 测评结果仅供职业探索参考</footer>
+
+  <script>
+    document.getElementById("startBtn").addEventListener("click", async () => {
+      const status = document.getElementById("status");
+      status.textContent = "正在检查服务器……";
+
+      try {
+        const response = await fetch("/api/health");
+        if (!response.ok) throw new Error("服务器响应异常");
+
+        const data = await response.json();
+        status.textContent = data.message;
+      } catch (error) {
+        status.textContent = "暂时无法连接服务器，请确认网站已部署。";
+      }
+    });
+  </script>
+</body>
+</html>

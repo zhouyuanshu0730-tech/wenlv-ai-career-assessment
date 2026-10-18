@@ -2,118 +2,457 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="文旅AI职业测评，探索你的职业能力与岗位方向">
-  <title>文旅 AI 职业测评系统</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-        "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: #f4f7fb;
-      color: #1f2937;
-    }
-    header {
-      padding: 24px 20px;
-      background: #183b56;
-      color: white;
-      text-align: center;
-    }
-    header h1 { margin: 0 0 8px; font-size: 26px; }
-    header p { margin: 0; color: #dbeafe; }
-    main {
-      width: min(720px, 92%);
-      margin: 32px auto;
-      padding: 28px;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 8px 28px #1e293b0d;
-    }
-    .tag {
-      display: inline-block;
-      padding: 6px 10px;
-      background: #e8f2ff;
-      color: #245b85;
-      border-radius: 20px;
-      font-size: 13px;
-    }
-    h2 { margin-top: 22px; }
-    li { margin: 12px 0; line-height: 1.7; }
-    button {
-      width: 100%;
-      padding: 14px;
-      border: 0;
-      border-radius: 10px;
-      background: #245b85;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    button:hover { background: #183b56; }
-    #status { margin-top: 16px; color: #526273; }
-    footer {
-      text-align: center;
-      color: #718096;
-      font-size: 13px;
-      padding: 0 16px 28px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文旅 AI 职业测评</title>
+<style>
+:root {
+  --navy:#183b56;
+  --blue:#2878a8;
+  --light:#eef5f8;
+  --gold:#d7a64a;
+  --text:#243746;
+  --muted:#687b89;
+  --border:#dce6ec;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  background:#f3f6f9;
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+  "Microsoft YaHei",sans-serif;
+  line-height:1.7;
+}
+header {
+  background:linear-gradient(135deg,#17364f,#2878a8);
+  color:white;
+  padding:38px 20px;
+}
+.hero { max-width:920px; margin:auto; }
+.eyebrow { letter-spacing:3px; font-size:12px; opacity:.8; }
+h1 { font-size:clamp(27px,5vw,40px); margin:8px 0; }
+header p { margin:8px 0; opacity:.9; }
+main { max-width:920px; margin:24px auto; padding:0 15px 50px; }
+.card {
+  background:white; border:1px solid var(--border);
+  border-radius:16px; padding:22px; margin-bottom:18px;
+  box-shadow:0 5px 18px rgba(26,54,77,.04);
+}
+h2 { font-size:21px; margin:0 0 12px; color:var(--navy); }
+h3 { font-size:17px; margin:0 0 10px; }
+.note { color:var(--muted); font-size:14px; }
+.pills { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
+.pill { background:rgba(255,255,255,.14); padding:5px 12px; border-radius:20px; font-size:13px; }
+.progress-wrap { height:8px; background:#e8eef2; border-radius:10px; overflow:hidden; margin:15px 0; }
+#progress { width:0; height:100%; background:var(--gold); transition:width .2s; }
+.question { padding:18px 0; border-bottom:1px solid #edf1f4; }
+.question:last-child { border-bottom:0; }
+.q-title { font-weight:650; margin-bottom:12px; }
+.q-number { color:var(--blue); font-size:13px; font-weight:700; margin-right:6px; }
+.option {
+  display:flex; gap:10px; align-items:flex-start;
+  border:1px solid var(--border); border-radius:10px;
+  padding:11px 12px; margin:8px 0; cursor:pointer;
+}
+.option:has(input:checked) { border-color:var(--blue); background:#edf6fb; }
+.option input { margin-top:6px; accent-color:var(--blue); }
+button {
+  border:0; border-radius:10px; padding:12px 18px;
+  font-size:15px; font-weight:650; cursor:pointer;
+}
+button:disabled { opacity:.55; cursor:wait; }
+.primary { color:white; background:var(--blue); }
+.secondary { color:var(--navy); background:#eaf0f4; }
+.actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+#status { white-space:pre-wrap; overflow-wrap:anywhere; }
+.hidden { display:none !important; }
+.score-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.score-item { background:var(--light); border-radius:12px; padding:14px; }
+.score-top { display:flex; justify-content:space-between; gap:8px; font-weight:650; }
+.bar { height:8px; background:#dce7ed; border-radius:10px; margin-top:9px; overflow:hidden; }
+.bar div { height:100%; background:var(--blue); }
+.big-score { font-size:38px; color:var(--navy); font-weight:800; }
+.rank { display:flex; gap:14px; align-items:center; border-bottom:1px solid var(--border); padding:14px 0; }
+.rank:last-child { border:0; }
+.rank-num { width:42px; height:42px; display:grid; place-items:center; background:#edf4f8; border-radius:12px; font-weight:800; color:var(--navy); }
+.rank-main { flex:1; min-width:0; }
+.rank-score { font-size:20px; font-weight:800; color:var(--blue); }
+#aiReport { white-space:pre-wrap; }
+footer { text-align:center; color:var(--muted); font-size:12px; padding:20px; }
+@media(max-width:540px) {
+ .card { padding:16px; }
+ .score-grid { grid-template-columns:1fr; }
+ header { padding:28px 18px; }
+}
+@media print {
+ body { background:white; font-size:12px; }
+ header { padding:20px; background:#eaf1f5 !important; color:#183b56 !important; }
+ main { max-width:none; margin:10px auto; padding:0; }
+ .no-print, #quizCard, footer { display:none !important; }
+ .card { box-shadow:none; break-inside:avoid; border:1px solid #ccd6dc; }
+ #result { display:block !important; }
+}
+</style>
 </head>
 <body>
-  <header>
+<header>
+  <div class="hero">
+    <div class="eyebrow">TOURISM · CAREER · AI</div>
     <h1>文旅 AI 职业测评</h1>
-    <p>探索职业能力，发现适合你的文旅岗位</p>
-  </header>
+    <p>发现能力优势，探索适合你的文旅职业方向。</p>
+    <div class="pills">
+      <span class="pill">16 道情景题</span>
+      <span class="pill">6 大能力维度</span>
+      <span class="pill">10 个岗位方向</span>
+      <span class="pill">约 3–5 分钟</span>
+    </div>
+  </div>
+</header>
 
-  <main>
-    <span class="tag">16 道情景题 · 6 大能力维度</span>
-    <h2>欢迎参加职业测评</h2>
-    <p>本系统将根据你的答题情况，分析职业能力表现，并提供文旅岗位匹配建议。</p>
-    <ul>
-      <li>沟通服务、组织协调、应变能力</li>
-      <li>讲解表达、数据分析、学习执行</li>
-      <li>测评完成后生成个人职业分析报告</li>
-    </ul>
-<button id="startBtn" type="button">测试 DeepSeek AI</button>
-    <p id="status" role="status">准备就绪，点击按钮检查服务器连接。</p>
-  </main>
+<main>
+  <section class="card" id="intro">
+    <h2>开始前，请了解测评规则</h2>
+    <p>请结合自己遇到类似情况时最可能采取的行动作答。每题只能选择一个答案，完成全部题目后系统将计算能力得分、岗位匹配度，并可请求 AI 生成分析。</p>
+    <p class="note">本测评用于职业探索和自我认知，不是专业资质认证，也不能单独决定就业或录用结果。</p>
+    <button class="primary" id="beginBtn">开始测评 →</button>
+  </section>
 
-  <footer>文旅 AI 职业测评系统 · 测评结果仅供职业探索参考</footer>
+  <section class="card hidden" id="quizCard">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center">
+      <h2 style="margin:0">情景选择题</h2>
+      <span id="progressText" class="note">已完成 0 / 16</span>
+    </div>
+    <div class="progress-wrap"><div id="progress"></div></div>
+    <p class="note">请选择最符合你实际做法的选项。</p>
+    <form id="quizForm">
+      <div id="questions"></div>
+      <div class="actions">
+        <button type="button" class="secondary" id="backBtn">返回说明</button>
+        <button type="submit" class="primary">提交答案并生成报告</button>
+      </div>
+      <p class="note" id="quizMessage" role="status"></p>
+    </form>
+  </section>
 
-  <script>
-document.getElementById("startBtn").addEventListener("click", async () => {
-  const status = document.getElementById("status");
-  const button = document.getElementById("startBtn");
+  <section class="hidden" id="result">
+    <div class="card">
+      <h2>你的测评结果</h2>
+      <p class="note">以下为根据所选答案计算的结果。岗位匹配度代表与预设能力权重的相对契合程度，不代表就业成功率。</p>
+      <div class="score-grid" id="scores"></div>
+      <div style="margin-top:18px">
+        <div class="note">16 道题总分（满分 80）</div>
+        <div class="big-score" id="totalScore">0 / 80</div>
+      </div>
+    </div>
 
-  button.disabled = true;
-  status.textContent = "正在连接 DeepSeek AI，请稍候……";
+    <div class="card">
+      <h2>TOP 3 岗位推荐</h2>
+      <div id="topJobs"></div>
+    </div>
 
-  try {
-    const response = await fetch("/api/ai-test", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        prompt: "请用简短的中文介绍文旅行业的职业发展方向，并给出三个例子。"
-      })
+    <div class="card">
+      <h2>10 个岗位探索优先级</h2>
+      <div id="allJobs"></div>
+    </div>
+
+    <div class="card">
+      <h2>优势与挑战</h2>
+      <div id="strengths"></div>
+    </div>
+
+    <div class="card">
+      <h2>DeepSeek AI 职业发展分析</h2>
+      <p class="note">AI 将依据本次测评得分和岗位匹配结果生成建议。该分析是辅助参考。</p>
+      <div id="aiReport">点击下方按钮生成个性化分析。</div>
+      <div class="actions no-print">
+        <button class="primary" id="aiBtn">生成 AI 职业分析</button>
+      </div>
+      <p class="note" id="aiStatus" role="status"></p>
+    </div>
+
+    <div class="card no-print">
+      <h2>保存报告</h2>
+      <p>点击打印后，在打印窗口中选择“另存为 PDF”。手机或电脑均可使用浏览器打印功能；不同设备的菜单名称可能略有不同。</p>
+      <div class="actions">
+        <button class="primary" id="pdfBtn">打印 / 另存为 PDF</button>
+        <button class="secondary" id="restartBtn">重新测评</button>
+      </div>
+    </div>
+  </section>
+</main>
+<footer>文旅 AI 职业测评 · 结果仅用于职业探索与学习参考</footer>
+
+<script>
+const dimensions = [
+  "沟通服务","组织协调","应变能力","讲解表达","数据分析","学习执行"
+];
+
+const questions = [
+  {d:0,t:"在酒店前台值班，一位游客语气烦躁，抱怨房间空调制冷效果不好，你会优先？",o:[
+    ["告知这不是我的责任，请找工程部",0],
+    ["先安抚对方情绪，记录诉求，立刻协助对接处理",5],
+    ["跟客人解释空调没问题，是操作方式不对",1],
+    ["建议客人自己打电话报修",3]
+  ]},
+  {d:0,t:"研学团里一名家长发来消息，担心孩子中午的饮食是否安全，你的做法是？",o:[
+    ["回复：不用担心，不会出事",1],
+    ["耐心回应疑虑，简要说明餐饮保障方案，给予安心答复",5],
+    ["直接转发一条食堂的图片",3],
+    ["延后几个小时再回复",0]
+  ]},
+  {d:0,t:"景区游客向你打听一个不在常规游览路线上的小众打卡点，但是距离很远，你会？",o:[
+    ["直接说不知道",1],
+    ["告诉他位置，同时说明往返耗时与注意事项",5],
+    ["劝他千万别去，很麻烦",3],
+    ["随便指一个大概方向",0]
+  ]},
+  {d:1,t:"需要组织一场面向在校学生的文旅企业参观活动，时间紧，第一步你会？",o:[
+    ["立刻发通知让大家集合出发",1],
+    ["梳理参与人数、时间、对接企业、安全事项，制定简易流程",5],
+    ["先去联系车辆",3],
+    ["先去做宣传海报",0]
+  ]},
+  {d:1,t:"一场文旅直播活动，临时出现两位工作人员任务冲突，同一时间要做两件事，你会？",o:[
+    ["顺其自然，等他们自己解决",1],
+    ["快速评估两项任务优先级，重新分工协调",5],
+    ["再加派一个人把两件事全包下来",3],
+    ["推迟全部活动",0]
+  ]},
+  {d:1,t:"研学出行途中，小组内部对于参观顺序产生了不同意见，你会？",o:[
+    ["听从自己的想法直接决定",1],
+    ["收集各方诉求，平衡利弊给出折中可行方案",5],
+    ["让大家无休止投票争论",3],
+    ["直接跳过这个点位",0]
+  ]},
+  {d:2,t:"在景区做志愿讲解，突然下起了大雨，没有提前准备防雨预案，你会？",o:[
+    ["慌乱不知所措，原地等待",1],
+    ["迅速就近寻找避雨点，调整讲解顺序，安抚同行人员",5],
+    ["不管天气，坚持走完原定路线",3],
+    ["立刻解散队伍",0]
+  ]},
+  {d:2,t:"直播宣传文旅景点的时候，评论区突然出现一条负面的质疑留言，你会？",o:[
+    ["无视这条留言",3],
+    ["保持冷静，礼貌简短回应，必要时线下跟进处理",5],
+    ["和网友在线争辩",1],
+    ["马上关闭直播间",0]
+  ]},
+  {d:2,t:"酒店接待高峰期，同时来了好几批需要办理入住的客人，前台人手紧张，你会？",o:[
+    ["坐着等待其他人来解决",0],
+    ["主动做好引导分流，维护秩序，协助基础问询",5],
+    ["抱怨任务太重",1],
+    ["躲开繁忙区域",3]
+  ]},
+  {d:3,t:"面对一群中小学生做景区景点讲解，你的语言风格倾向于？",o:[
+    ["使用大量晦涩难懂的专业术语",1],
+    ["生动通俗、适当加入小故事，节奏轻快易懂",5],
+    ["照着资料一字不差地念稿",3],
+    ["讲得越快越好",0]
+  ]},
+  {d:3,t:"需要简短向游客介绍一条特色旅游线路，你会优先？",o:[
+    ["长篇大论，罗列所有细碎信息",1],
+    ["抓住亮点，提炼 3–4 个核心特色进行介绍",5],
+    ["只说价格，不提内容",3],
+    ["含糊其辞，让对方自己看宣传单",0]
+  ]},
+  {d:4,t:"文旅短视频账号一周播放量下滑了，你首先会？",o:[
+    ["立刻疯狂更换所有内容主题",3],
+    ["查看后台数据：观看时长、点赞、转发，寻找可能的原因",5],
+    ["认为只是运气不好，不用管",1],
+    ["全部改成当下最火的热点，不管是否贴合文旅",0]
+  ]},
+  {d:4,t:"景区几个套餐产品销量差异很大，你希望找到根源，你会？",o:[
+    ["凭直觉判断哪个好卖",1],
+    ["对比价格、宣传力度、游客评价数据，进行综合分析",5],
+    ["只看价格高低做结论",3],
+    ["不用分析，随机调整",0]
+  ]},
+  {d:5,t:"企业给了你一套从未接触过的票务管理系统，需要快速上手，你会？",o:[
+    ["完全不想去学习",0],
+    ["主动寻找操作说明、请教前辈，快速上手基础操作",5],
+    ["一直等别人来替自己完成",1],
+    ["只学一点点，其余全部摆烂",3]
+  ]},
+  {d:5,t:"老师布置了一份文旅活动策划初稿任务，有截止时间，你会？",o:[
+    ["等到最后一天连夜突击",3],
+    ["拆分任务节点，分步推进，按时完成",5],
+    ["拖延，尽量不做",0],
+    ["随便写几句话应付",1]
+  ]},
+  {d:5,t:"去合作企业参观，看到了一种你不了解的新型文旅服务模式，你会？",o:[
+    ["不感兴趣，不去关注",1],
+    ["记下疑问点，适时请教或者后续主动查阅资料了解",5],
+    ["心里嘲笑这种新模式",0],
+    ["看一看就忘，不去思考",3]
+  ]}
+];
+
+const jobs = [
+  {n:"酒店运营",w:[25,20,25,5,10,15]},
+  {n:"景区接待",w:[30,15,25,15,5,10]},
+  {n:"研学服务",w:[20,25,20,20,5,10]},
+  {n:"文旅策划",w:[10,20,10,15,30,15]},
+  {n:"文旅新媒体运营",w:[15,10,15,20,30,10]},
+  {n:"邮轮文旅服务",w:[30,20,25,10,5,10]},
+  {n:"文旅电商票务运营",w:[20,15,10,5,30,20]},
+  {n:"会展活动执行",w:[15,30,25,10,10,10]},
+  {n:"文旅定制管家",w:[30,20,15,15,10,10]},
+  {n:"文旅文创运营",w:[15,15,10,25,25,10]}
+];
+
+const maxScores = [15,15,15,10,10,15];
+const form = document.getElementById("quizForm");
+const intro = document.getElementById("intro");
+const quizCard = document.getElementById("quizCard");
+const result = document.getElementById("result");
+let latestReport = null;
+
+function renderQuestions() {
+  document.getElementById("questions").innerHTML = questions.map((q,i)=>`
+    <div class="question">
+      <div class="q-title"><span class="q-number">第 ${i+1} 题 · ${dimensions[q.d]}</span><br>${q.t}</div>
+      ${q.o.map((o,j)=>`
+        <label class="option">
+          <input type="radio" name="q${i}" value="${j}">
+          <span>${String.fromCharCode(65+j)}. ${o[0]}</span>
+        </label>`).join("")}
+    </div>`).join("");
+}
+
+function updateProgress() {
+  const count = questions.filter((_,i)=>form.querySelector(`input[name="q${i}"]:checked`)).length;
+  document.getElementById("progressText").textContent = `已完成 ${count} / ${questions.length}`;
+  document.getElementById("progress").style.width = `${count/questions.length*100}%`;
+}
+document.getElementById("beginBtn").addEventListener("click",()=>{
+  intro.classList.add("hidden");
+  quizCard.classList.remove("hidden");
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+document.getElementById("backBtn").addEventListener("click",()=>{
+  quizCard.classList.add("hidden");
+  intro.classList.remove("hidden");
+});
+form.addEventListener("change",updateProgress);
+
+form.addEventListener("submit",e=>{
+  e.preventDefault();
+  const answers = questions.map((_,i)=>form.querySelector(`input[name="q${i}"]:checked`));
+  const missing = answers.findIndex(a=>!a);
+  if(missing!==-1){
+    document.getElementById("quizMessage").textContent=`请先完成第 ${missing+1} 题。`;
+    form.querySelector(`input[name="q${missing}"]`).focus();
+    return;
+  }
+
+  const dimScores = [0,0,0,0,0,0];
+  let total=0;
+  const answerDetails=answers.map((a,i)=>{
+    const selected=Number(a.value);
+    const score=questions[i].o[selected][1];
+    dimScores[questions[i].d]+=score;
+    total+=score;
+    return {question:questions[i].t,dimension:dimensions[questions[i].d],
+      answer:questions[i].o[selected][0],score};
+  });
+  const rates=dimScores.map((s,i)=>Math.round(s/maxScores[i]*100));
+  const ranked=jobs.map(job=>({
+    name:job.n,
+    score:Math.round(job.w.reduce((sum,w,i)=>sum+rates[i]*w/100,0))
+  })).sort((a,b)=>b.score-a.score);
+
+  latestReport={total,dimScores,rates,ranked,answerDetails};
+  showReport();
+  quizCard.classList.add("hidden");
+  result.classList.remove("hidden");
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+
+function showReport(){
+  const r=latestReport;
+  document.getElementById("totalScore").textContent=`${r.total} / 80`;
+  document.getElementById("scores").innerHTML=dimensions.map((d,i)=>`
+    <div class="score-item">
+      <div class="score-top"><span>${d}</span><span>${r.rates[i]}%</span></div>
+      <div class="note">${r.dimScores[i]} / ${maxScores[i]} 分</div>
+      <div class="bar"><div style="width:${r.rates[i]}%"></div></div>
+    </div>`).join("");
+
+  document.getElementById("topJobs").innerHTML=r.ranked.slice(0,3).map((j,i)=>`
+    <div class="rank">
+      <div class="rank-num">${i+1}</div>
+      <div class="rank-main"><h3>${j.name}</h3><div class="note">能力权重匹配结果，仅供职业探索参考</div></div>
+      <div class="rank-score">${j.score}%</div>
+    </div>`).join("");
+
+  document.getElementById("allJobs").innerHTML=r.ranked.map((j,i)=>`
+    <div class="rank">
+      <div class="rank-num">${i+1}</div>
+      <div class="rank-main">${j.name}</div>
+      <div class="rank-score">${j.score}%</div>
+    </div>`).join("");
+
+  const strengths=dimensions.map((d,i)=>({name:d,rate:r.rates[i]}));
+  const strong=strengths.filter(x=>x.rate>=75);
+  const challenge=strengths.filter(x=>x.rate<=45);
+  const improve=strengths.filter(x=>x.rate>=46&&x.rate<=74);
+  document.getElementById("strengths").innerHTML=`
+    <h3>值得发展的优势（≥75%）</h3>
+    <p>${strong.length?strong.map(x=>`${x.name}（${x.rate}%）`).join("、"):"目前没有维度达到该标准，可继续积累相关实践经验。"}</p>
+    <h3>需要关注的挑战（≤45%）</h3>
+    <p>${challenge.length?challenge.map(x=>`${x.name}（${x.rate}%）`).join("、"):"目前没有维度落入该区间。"}</p>
+    <h3>可提升空间（46%–74%）</h3>
+    <p>${improve.length?improve.map(x=>`${x.name}（${x.rate}%）`).join("、"):"暂无维度落入该区间。"}</p>`;
+  document.getElementById("aiReport").textContent="点击下方按钮生成个性化分析。";
+  document.getElementById("aiStatus").textContent="";
+}
+
+document.getElementById("aiBtn").addEventListener("click",async()=>{
+  if(!latestReport)return;
+  const btn=document.getElementById("aiBtn");
+  const status=document.getElementById("aiStatus");
+  btn.disabled=true;
+  status.textContent="正在请求 DeepSeek，请稍候……";
+  try{
+    const prompt=`你是一名专业的文旅职业发展顾问。请根据以下已计算的测评结果，用中文生成清晰、务实的职业分析。
+要求：
+1. 解释前三名岗位为什么可能值得探索；
+2. 总结优势、挑战和提升空间；
+3. 提供三条可执行的学习或实践建议；
+4. 不要夸大结论，不要把测评当成录用判断；
+5. 不要重新计算或修改给定分数。
+
+总分：${latestReport.total}/80
+六维得分率：${dimensions.map((d,i)=>`${d} ${latestReport.rates[i]}%（${latestReport.dimScores[i]}/${maxScores[i]}）`).join("；")}
+岗位匹配排序：${latestReport.ranked.map((j,i)=>`${i+1}. ${j.name} ${j.score}%`).join("；")}
+用户作答：${latestReport.answerDetails.map((a,i)=>`${i+1}. [${a.dimension}] ${a.answer}（${a.score}分）`).join("\n")}`;
+
+    const response=await fetch("/api/ai-test",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({prompt})
     });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.success) {
-      throw new Error(data.message || "AI 请求失败");
-    }
-
-    status.textContent = data.result;
-  } catch (error) {
-    status.textContent = "测试失败：" + error.message;
-  } finally {
-    button.disabled = false;
+    const data=await response.json();
+    if(!response.ok||!data.success)throw new Error(data.message||"AI 请求失败");
+    document.getElementById("aiReport").textContent=data.result||"AI 未返回内容，请稍后重试。";
+    status.textContent="AI 分析已生成。";
+  }catch(err){
+    status.textContent="生成失败："+err.message+"。请检查网络或稍后重试。";
+  }finally{
+    btn.disabled=false;
   }
 });
-  </script>
+
+document.getElementById("pdfBtn").addEventListener("click",()=>window.print());
+document.getElementById("restartBtn").addEventListener("click",()=>{
+  form.reset();
+  latestReport=null;
+  result.classList.add("hidden");
+  intro.classList.remove("hidden");
+  updateProgress();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+renderQuestions();
+</script>
 </body>
 </html>

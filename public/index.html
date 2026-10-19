@@ -111,7 +111,49 @@ footer { text-align:center; color:var(--muted); font-size:12px; padding:20px; }
 </header>
 
 <main>
-  <section class="card" id="intro">
+  <section class="card" id="consentCard">
+  <h2>测评数据使用授权</h2>
+  <p>请阅读以下选项，并自主决定是否授权。拒绝授权不影响你完成测评和查看本地报告。</p>
+
+  <label class="option">
+    <input type="radio" name="consentType" value="identified">
+    <span>
+      <strong>实名授权</strong><br>
+      同意提交姓名、学号、测评得分及意向岗位，用于岗位匹配与统计。
+    </span>
+  </label>
+
+  <label class="option">
+    <input type="radio" name="consentType" value="anonymous">
+    <span>
+      <strong>匿名统计授权</strong><br>
+      同意提交能力得分和意向岗位用于统计，不提交姓名、学号和原始答题记录。
+    </span>
+  </label>
+
+  <label class="option">
+    <input type="radio" name="consentType" value="none">
+    <span>
+      <strong>拒绝所有授权</strong><br>
+      测评结果仅在当前设备本地生成，不向测评服务器或 DeepSeek 发送测评数据。
+    </span>
+  </label>
+
+  <div id="identityFields" class="hidden">
+    <label for="participantName">姓名</label>
+    <input id="participantName" type="text" maxlength="100"
+      autocomplete="name" placeholder="请输入姓名">
+
+    <label for="studentId">学号</label>
+    <input id="studentId" type="text" maxlength="100"
+      autocomplete="off" placeholder="请输入学号">
+  </div>
+
+  <p class="note">请注意：选择授权后，数据将按所选用途提交。实名信息属于个人信息，请谨慎填写。</p>
+  <button type="button" class="primary" id="confirmConsentBtn">确认选择并开始测评</button>
+  <p id="consentMessage" class="note" role="status"></p>
+</section>
+<section class="card hidden" id="intro">
     <h2>开始前，请了解测评规则</h2>
     <p>请结合自己遇到类似情况时最可能采取的行动作答。每题只能选择一个答案，完成全部题目后系统将计算能力得分、岗位匹配度，并可请求 AI 生成分析。</p>
     <p class="note">本测评用于职业探索和自我认知，不是专业资质认证，也不能单独决定就业或录用结果。</p>
@@ -306,6 +348,44 @@ const intro = document.getElementById("intro");
 const quizCard = document.getElementById("quizCard");
 const result = document.getElementById("result");
 let latestReport = null;
+  let selectedConsent = null;
+
+const consentCard = document.getElementById("consentCard");
+const identityFields = document.getElementById("identityFields");
+const participantNameInput = document.getElementById("participantName");
+const studentIdInput = document.getElementById("studentId");
+
+document.querySelectorAll('input[name="consentType"]').forEach(radio => {
+  radio.addEventListener("change", () => {
+    const identified = radio.checked && radio.value === "identified";
+    identityFields.classList.toggle("hidden", !identified);
+    participantNameInput.required = identified;
+    studentIdInput.required = identified;
+  });
+});
+  document.getElementById("confirmConsentBtn").addEventListener("click", () => {
+  const choice = document.querySelector('input[name="consentType"]:checked');
+  const message = document.getElementById("consentMessage");
+
+  if (!choice) {
+    message.textContent = "请先选择一种授权方式。";
+    return;
+  }
+
+  if (
+    choice.value === "identified" &&
+    (!participantNameInput.value.trim() || !studentIdInput.value.trim())
+  ) {
+    message.textContent = "实名授权需要填写姓名和学号。";
+    return;
+  }
+
+  selectedConsent = choice.value;
+  consentCard.classList.add("hidden");
+  intro.classList.remove("hidden");
+  message.textContent = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
 
 function renderQuestions() {
   document.getElementById("questions").innerHTML = questions.map((q,i)=>`
@@ -361,7 +441,14 @@ form.addEventListener("submit",e=>{
     score:Math.round(job.w.reduce((sum,w,i)=>sum+rates[i]*w/100,0))
   })).sort((a,b)=>b.score-a.score);
 
-  latestReport={total,dimScores,rates,ranked,answerDetails};
+  latestReport = {
+  total,
+  dimScores,
+  rates,
+  ranked,
+  answerDetails,
+  consentType: selectedConsent
+};
   showReport();
   quizCard.classList.add("hidden");
   result.classList.remove("hidden");
@@ -426,8 +513,23 @@ document.getElementById("aiBtn").addEventListener("click",async()=>{
 六维得分率：${dimensions.map((d,i)=>`${d} ${latestReport.rates[i]}%（${latestReport.dimScores[i]}/${maxScores[i]}）`).join("；")}
 岗位匹配排序：${latestReport.ranked.map((j,i)=>`${i+1}. ${j.name} ${j.score}%`).join("；")}
 用户作答：${latestReport.answerDetails.map((a,i)=>`${i+1}. [${a.dimension}] ${a.answer}（${a.score}分）`).join("\n")}`;
+if (selectedConsent === "none") {
+  const localReport = [
+    "【本地测评分析】",
+    "测评总分：" + latestReport.total + "/80",
+    "六维得分率：" + dimensions.map((d, i) => d + " " + latestReport.rates[i] + "%").join("；"),
+    "岗位匹配排序：" + latestReport.ranked.slice(0, 3).map((j, i) => (i + 1) + ". " + j.name + " " + j.score + "%").join("；"),
+    "你选择了拒绝所有授权，本次不请求 AI 分析接口。",
+    "建议：结合能力得分与岗位排序，选择感兴趣的岗位进行课程学习、实习或实践验证。"
+  ].join("\n");
 
-    const response=await fetch("/api/ai-test",{
+  document.getElementById("aiReport").textContent = localReport;
+  status.textContent = "已生成本地分析，未请求 AI 接口。";
+  btn.disabled = false;
+  return;
+}
+
+const response=await fetch("/api/ai-test",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({prompt})

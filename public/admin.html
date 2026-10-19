@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文旅AI职业测评 - 管理后台</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "Microsoft YaHei", sans-serif;
+      background: #f3f6fb;
+      color: #1e293b;
+    }
+    header {
+      background: #172554;
+      color: white;
+      padding: 22px 28px;
+    }
+    header h1 { margin: 0 0 8px; font-size: 23px; }
+    header p { margin: 0; color: #cbd5e1; font-size: 13px; }
+    main { max-width: 1200px; margin: 28px auto; padding: 0 20px; }
+    .welcome {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; flex-wrap: wrap; margin-bottom: 22px;
+    }
+    .welcome h2 { margin: 0 0 7px; font-size: 21px; }
+    .welcome p { margin: 0; color: #64748b; font-size: 14px; }
+    .tag {
+      padding: 8px 12px; border-radius: 20px;
+      background: #dbeafe; color: #1d4ed8; font-size: 12px;
+    }
+    .stats {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: white; border-radius: 14px; padding: 22px;
+      border: 1px solid #e5eaf2;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, .03);
+    }
+    .label { color: #64748b; font-size: 13px; }
+    .number { font-size: 32px; font-weight: 750; margin: 14px 0 8px; }
+    .note { color: #94a3b8; font-size: 12px; }
+    .section {
+      display: grid; grid-template-columns: 1.4fr 1fr;
+      gap: 16px; margin-top: 20px;
+    }
+    .section h3 { font-size: 16px; margin: 0 0 18px; }
+    .empty {
+      min-height: 180px; border: 1px dashed #cbd5e1;
+      border-radius: 10px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center;
+      padding: 20px; color: #64748b; gap: 10px;
+    }
+    .empty strong { color: #334155; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+    button {
+      border: 0; border-radius: 9px; padding: 11px 16px;
+      background: #2563eb; color: white; font-size: 14px;
+      cursor: pointer;
+    }
+    button.secondary { background: white; color: #334155; border: 1px solid #cbd5e1; }
+    .warning {
+      margin-top: 20px; padding: 14px 16px; border-radius: 10px;
+      background: #fff7ed; color: #9a3412; font-size: 13px; line-height: 1.7;
+    }
+    footer { text-align: center; padding: 28px 16px; color: #94a3b8; font-size: 12px; }
+    @media (max-width: 850px) {
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .section { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      header { padding: 20px; }
+      main { padding: 0 14px; margin-top: 20px; }
+      .stats { gap: 10px; }
+      .card { padding: 16px; }
+      .number { font-size: 27px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>文旅 AI 职业测评系统</h1>
+    <p>ADMINISTRATION CONSOLE · 管理后台</p>
+  </header>
+
+  <main>
+    <div class="welcome">
+      <div>
+        <h2>数据总览</h2>
+        <p>集中查看测评运行情况与统计指标</p>
+      </div>
+      <span class="tag">后台首页原型</span>
+    </div>
+
+    <div class="stats">
+      <div class="card">
+        <div class="label">测评总人数</div>
+        <div class="number">--</div>
+        <div class="note">等待接入真实数据库</div>
+      </div>
+      <div class="card">
+        <div class="label">实名测评人数</div>
+        <div class="number">--</div>
+        <div class="note">仅统计已授权记录</div>
+      </div>
+      <div class="card">
+        <div class="label">匿名测评人数</div>
+        <div class="number">--</div>
+        <div class="note">不展示个人身份信息</div>
+      </div>
+      <div class="card">
+        <div class="label">平均测评分数</div>
+        <div class="number">--</div>
+        <div class="note">等待接入真实数据库</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="card">
+        <h3>测评数量趋势</h3>
+        <div class="empty">
+          <strong>暂无趋势数据</strong>
+          <span>接入数据库后，将展示每日测评数量变化。</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>职业方向分布</h3>
+        <div class="empty">
+          <strong>暂无分布数据</strong>
+          <span>后续接入职业匹配统计。</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <h3>后台功能</h3>
+      <p style="color:#64748b;font-size:14px;line-height:1.8">
+        下一阶段将接入真实测评数据，并添加日期筛选、统计图表和报表导出。
+        管理员登录及数据访问权限也需要单独配置。
+      </p>
+      <div class="actions">
+        <button onclick="alert('此功能将在后续步骤中接入')">刷新统计</button>
+        <button class="secondary" onclick="location.href='/'">返回测评首页</button>
+      </div>
+    </div>
+
+    <div class="warning">
+      提醒：当前页面仅为首页原型，统计数字尚未连接数据库。
+      在完成管理员身份验证与后端权限控制前，不要将此页面视为安全的正式管理后台。
+    </div>
+  </main>
+
+  <footer>文旅 AI 职业测评系统 · 管理后台</footer>
+</body>
+</html>

@@ -323,6 +323,73 @@ if (rankings.length === 0) {
       document.querySelectorAll(".stats .card .number")[2].textContent = data.anonymousCount;
       document.querySelectorAll(".stats .card .number")[3].textContent = data.averageScore;
 
+            // 加载最近100条测评记录
+      const recordsContainer = document.getElementById("assessmentRecordsList");
+      recordsContainer.innerHTML = '<p style="color:#64748b;font-size:14px">正在加载测评记录...</p>';
+
+      try {
+        const recordsResponse = await fetch("/api/admin/records", {
+          method: "GET",
+          headers: {
+            "x-admin-password": password
+          },
+          cache: "no-store"
+        });
+
+        const recordsData = await recordsResponse.json();
+
+        if (!recordsResponse.ok || !recordsData.success) {
+          recordsContainer.innerHTML =
+            '<p style="color:#dc2626;font-size:14px">测评记录加载失败，请刷新后重试。</p>';
+        } else if (!Array.isArray(recordsData.records) || recordsData.records.length === 0) {
+          recordsContainer.innerHTML =
+            '<p style="color:#64748b;font-size:14px">暂无已保存的测评记录。</p>';
+        } else {
+          recordsContainer.innerHTML = recordsData.records.map((record, index) => {
+            const date = record.created_at
+              ? new Date(record.created_at).toLocaleString("zh-CN")
+              : "时间未知";
+
+            const score = Number.isFinite(Number(record.total_score))
+              ? Number(record.total_score)
+              : "--";
+
+            const report = JSON.stringify({
+              测评时间: date,
+              测评总分: score,
+              授权类型: record.consent_type === "identified" ? "实名授权" : "匿名授权",
+              维度得分: record.dimension_scores || {},
+              职业匹配: record.job_matches || [],
+              AI分析报告: record.ai_analysis || "暂无分析报告"
+            }, null, 2);
+
+            return `
+              <div style="padding:14px 0;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+                <div>
+                  <div style="font-weight:600;color:#334155">第 ${index + 1} 条测评记录</div>
+                  <div style="font-size:13px;color:#64748b;margin-top:6px">${date}</div>
+                  <div style="font-size:14px;color:#0f766e;margin-top:6px">总分：${score}</div>
+                </div>
+                <button type="button" onclick="viewAssessmentReport(${index})">查看详细报告</button>
+              </div>
+            `;
+          }).join("");
+
+          window.assessmentReportData = recordsData.records.map(record => ({
+            测评时间: record.created_at
+              ? new Date(record.created_at).toLocaleString("zh-CN")
+              : "时间未知",
+            测评总分: record.total_score ?? "--",
+            授权类型: record.consent_type === "identified" ? "实名授权" : "匿名授权",
+            维度得分: record.dimension_scores || {},
+            职业匹配: record.job_matches || [],
+            AI分析报告: record.ai_analysis || "暂无分析报告"
+          }));
+        }
+      } catch (error) {
+        recordsContainer.innerHTML =
+          '<p style="color:#dc2626;font-size:14px">测评记录加载失败，请检查网络后重试。</p>';
+      }
       loginBox.style.display = "none";
       document.querySelector(".welcome").style.display = "flex";
       document.querySelector(".stats").style.display = "grid";
@@ -330,6 +397,77 @@ if (rankings.length === 0) {
     } catch (error) {
       message.textContent = "连接服务器失败，请稍后重试";
     }
+  }
+    // 查看测评详细报告
+  function viewAssessmentReport(index) {
+    const reports = window.assessmentReportData || [];
+    const report = reports[index];
+
+    if (!report) {
+      alert("未找到这条测评报告，请重新登录后台。");
+      return;
+    }
+
+    const reportWindow = window.open("", "_blank", "width=800,height=700");
+
+    if (!reportWindow) {
+      alert("浏览器阻止了报告窗口，请允许打开弹出窗口后重试。");
+      return;
+    }
+
+    const safeReport = JSON.stringify(report, null, 2)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    reportWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="zh-CN">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>测评详细报告</title>
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+            color: #1e293b;
+            line-height: 1.7;
+          }
+          h1 { color: #172554; }
+          pre {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+          }
+          button {
+            background: #2563eb;
+            color: white;
+            border: 0;
+            border-radius: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+          }
+          @media print {
+            button { display: none; }
+            body { margin: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>测评详细报告</h1>
+        <button onclick="window.print()">打印 / 另存为 PDF</button>
+        <pre>${safeReport}</pre>
+      </body>
+      </html>
+    `);
+
+    reportWindow.document.close();
   }
   async function exportAllRecords() {
   const password = prompt("请输入后台管理员密码：");

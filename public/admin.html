@@ -376,6 +376,9 @@ if (rankings.length === 0) {
           }).join("");
 
           window.assessmentReportData = recordsData.records.map(record => ({
+            姓名: record.consent_type === "identified"
+  ? (record.participant_name || "未填写姓名")
+  : "匿名",
             测评时间: record.created_at
               ? new Date(record.created_at).toLocaleString("zh-CN")
               : "时间未知",

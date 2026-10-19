@@ -113,6 +113,7 @@ app.get("/api/admin/stats", requireAdmin, async (req, res) => {
     
     // 统计各职业方向在匹配结果中的出现次数
     const jobCounts = {};
+    const jobScoreTotals = {};
 
     records.forEach(item => {
       let matches = item.job_matches;
@@ -133,13 +134,21 @@ app.get("/api/admin/stats", requireAdmin, async (req, res) => {
         }
 
         const name = job.name.trim();
-        jobCounts[name] = (jobCounts[name] || 0) + 1;
+jobCounts[name] = (jobCounts[name] || 0) + 1;
+jobScoreTotals[name] = (jobScoreTotals[name] || 0) + (Number(job.score) || 0);
       });
     });
 
     const jobDistribution = Object.entries(jobCounts)
       .sort((a, b) => b[1] - a[1])
       .map(([name, count]) => ({ name, count }));
+    const jobAverageScores = Object.entries(jobCounts)
+  .map(([name, count]) => ({
+    name,
+    count,
+    averageScore: Number((jobScoreTotals[name] / count).toFixed(2))
+  }))
+  .sort((a, b) => b.averageScore - a.averageScore);
 
 return res.json({
   success: true,
@@ -148,7 +157,8 @@ return res.json({
   anonymousCount,
   averageScore,
   dailyTrend,
-  jobDistribution
+  jobDistribution,
+  jobAverageScores
 });
   } catch (error) {
     console.error("后台统计接口异常：", error.message);

@@ -169,7 +169,65 @@ return res.json({
     });
   }
 });
+// 导出全部测评记录（CSV，可用 Excel 打开）
+app.get("/api/admin/export", requireAdmin, async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(503).send("数据库尚未配置");
+    }
 
+    const { data, error } = await supabase
+      .from("assessment_records")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("导出测评记录失败：", error.message);
+      return res.status(500).send("导出测评记录失败");
+    }
+
+    const records = data || [];
+    const columns = [
+      "id",
+      "created_at",
+      "consent_type",
+      "total_score",
+      "dimension_scores",
+      "job_matches",
+      "ai_analysis"
+    ];
+
+    const escapeCsv = (value) => {
+      if (value === null || value === undefined) return '""';
+
+      const text = typeof value === "object"
+        ? JSON.stringify(value)
+        : String(value);
+
+      return '"' + text.replace(/"/g, '""') + '"';
+    };
+
+    const rows = [
+      columns.map(escapeCsv).join(","),
+      ...records.map(record =>
+        columns.map(column => escapeCsv(record[column])).join(",")
+      )
+    ];
+
+    const csv = "\uFEFF" + rows.join("\r\n");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="assessment_records.csv"'
+    );
+
+    return res.send(csv);
+  } catch (error) {
+    console.error("导出接口异常：", error.message);
+    return res.status(500).send("导出接口发生错误");
+  }
+});
 app.post("/api/ai-test", async (req, res) => {
   try {
     const prompt = req.body?.prompt;

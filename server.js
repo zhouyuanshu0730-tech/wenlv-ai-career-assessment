@@ -169,6 +169,42 @@ return res.json({
     });
   }
 });
+// 查询最近100条测评记录
+app.get("/api/admin/records", requireAdmin, async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(503).json({
+        success: false,
+        message: "数据库尚未配置"
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("assessment_records")
+      .select("id, created_at, consent_type, total_score, dimension_scores, job_matches, ai_analysis")
+      .order("created_at", { ascending: false })
+      .limit(100);
+
+    if (error) {
+      console.error("查询测评记录失败：", error.message);
+      return res.status(500).json({
+        success: false,
+        message: "查询测评记录失败"
+      });
+    }
+
+    return res.json({
+      success: true,
+      records: data || []
+    });
+  } catch (error) {
+    console.error("测评记录接口异常：", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "查询测评记录时发生错误"
+    });
+  }
+});
 // 导出全部测评记录（CSV，可用 Excel 打开）
 app.get("/api/admin/export", requireAdmin, async (req, res) => {
   try {

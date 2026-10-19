@@ -30,6 +30,58 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+app.get("/api/admin/stats", async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(503).json({
+        success: false,
+        message: "数据库尚未配置完成"
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("assessment_records")
+      .select("consent_type, total_score, created_at");
+
+    if (error) {
+      console.error("读取后台统计失败：", error.message);
+      return res.status(500).json({
+        success: false,
+        message: "读取统计数据失败"
+      });
+    }
+
+    const records = data || [];
+    const identifiedCount = records.filter(
+      item => item.consent_type === "identified"
+    ).length;
+    const anonymousCount = records.filter(
+      item => item.consent_type === "anonymous"
+    ).length;
+    const scores = records
+      .map(item => item.total_score)
+      .filter(score => Number.isFinite(score));
+
+    const averageScore = scores.length
+      ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length * 10) / 10
+      : 0;
+
+    res.json({
+      success: true,
+      totalCount: records.length,
+      identifiedCount,
+      anonymousCount,
+      averageScore
+    });
+  } catch (error) {
+    console.error("后台统计接口异常：", error.message);
+    res.status(500).json({
+      success: false,
+      message: "后台统计接口发生错误"
+    });
+  }
+});
+
 app.post("/api/ai-test", async (req, res) => {
   try {
     const prompt = req.body?.prompt;

@@ -449,6 +449,47 @@ form.addEventListener("submit",e=>{
   answerDetails,
   consentType: selectedConsent
 };
+    // 仅实名或匿名授权时提交测评记录
+  if (selectedConsent === "identified" || selectedConsent === "anonymous") {
+    const recordPayload = {
+      consent: true,
+      consentType: selectedConsent,
+      totalScore: total,
+      dimensionScores: Object.fromEntries(
+        dimensions.map((name, i) => [name, dimScores[i]])
+      ),
+      jobMatches: selectedConsent === "identified"
+        ? ranked
+        : [],
+      intendedJobs: [],
+      aiAnalysis: "",
+      answers: selectedConsent === "identified"
+        ? answerDetails
+        : []
+    };
+
+    if (selectedConsent === "identified") {
+      recordPayload.participantName = participantNameInput.value.trim();
+      recordPayload.studentId = studentIdInput.value.trim();
+    }
+
+    fetch("/api/assessment-records", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(recordPayload)
+    })
+      .then(async response => {
+        const data = await response.json();
+        if (!response.ok || !data.success || !data.saved) {
+          throw new Error(data.message || "保存失败");
+        }
+        console.log("测评记录已保存");
+      })
+      .catch(error => {
+        console.error("测评记录保存失败：", error.message);
+        alert("测评报告已生成，但记录未能保存。请稍后联系管理员检查。");
+      });
+  }
   showReport();
   quizCard.classList.add("hidden");
   result.classList.remove("hidden");

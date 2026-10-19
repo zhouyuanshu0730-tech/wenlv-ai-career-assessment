@@ -1,5 +1,6 @@
 
 import express from "express";
+import { createClient } from "@supabase/supabase-js";
 import { askDeepSeek } from "./ai.js";
 
 const app = express();
@@ -8,10 +9,24 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json({ limit: "20kb" }));
 app.use(express.static("public"));
 
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY;
+
+const supabase =
+  supabaseUrl && supabaseSecretKey
+    ? createClient(supabaseUrl, supabaseSecretKey, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false
+        }
+      })
+    : null;
+
 app.get("/api/health", (req, res) => {
   res.json({
     success: true,
-    message: "文旅AI职业测评服务器运行正常"
+    message: "文旅AI职业测评服务器运行正常",
+    databaseConfigured: Boolean(supabase)
   });
 });
 
@@ -42,6 +57,122 @@ app.post("/api/ai-test", async (req, res) => {
     res.status(502).json({
       success: false,
       message: "AI分析暂时不可用，请稍后重试"
+    });
+  }
+});
+
+app.post("/api/assessment-records", async (req, res) => {
+  try {
+    const {
+      consentType,
+      consent,
+      participantName,
+      studentId,
+      answers,
+      totalScore,
+      dimensionScores,
+      jobMatches,
+      aiAnalysis,
+      intendedJobs
+    } = req.body ?? {};
+
+    // 未授权：不保存测评记录
+    if (consent !== true || consentType === "none") {
+      return res.json({
+        success: true,
+        saved: false,
+        message: "未授权，不保存测评记录"
+      });
+    }
+
+    if (!supabase) {
+      return res.status(503).json({
+        success: false,
+        message: "数据库尚未配置完成"
+      });
+    }
+
+    if (
+      !["identified", "anonymous"].includes(consentType) ||
+      !Array.isArray(answers) ||
+      !Number.isFinite(totalScore) ||
+      !dimensionScores ||
+      typeof dimensionScores !== "object" ||
+      !Array.isArray(jobMatches) ||
+      typeof aiAnalysis !== "string"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "测评记录格式不正确"
+      });
+    }
+
+    let record;
+
+    if (consentType === "identified") {
+      if (
+        typeof participantName !== "string" ||
+        !participantName.trim() ||
+        typeof studentId !== "string" ||
+        !studentId.trim()
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "实名授权需要填写姓名和学号"
+        });
+      }
+
+      record = {
+        consent_type: "identified",
+        participant_name: participantName.trim().slice(0, 100),
+        student_id: studentId.trim().slice(0, 100),
+        answers,
+        total_score: totalScore,
+        dimension_scores: dimensionScores,
+        job_matches: jobMatches,
+        intended_jobs: Array.isArray(intendedJobs) ? intendedJobs : [],
+        ai_analysis: aiAnalysis.slice(0, 12000),
+        consent_at: new Date().toISOString()
+      };
+    } else {
+      // 匿名记录只保存统计所需数据，不保存姓名、学号或原始答案
+      record = {
+        consent_type: "anonymous",
+        participant_name: "匿名",
+        answers: [],
+        total_score: totalScore,
+        dimension_scores: dimensionScores,
+        job_matches: [],
+        intended_jobs: Array.isArray(intendedJobs) ? intendedJobs : [],
+        ai_analysis: "",
+        consent_at: new Date().toISOString()
+      };
+    }
+
+    const { error } = await supabase
+      .from("assessment_records")
+      .insert(record);
+
+    if (error) {
+      console.error("保存测评记录失败：", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "测评记录保存失败，请稍后重试"
+      });
+    }
+
+    return res.json({
+      success: true,
+      saved: true,
+      consentType
+    });
+  } catch (error) {
+    console.error("测评记录接口异常：", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "处理测评记录时发生错误"
     });
   }
 });

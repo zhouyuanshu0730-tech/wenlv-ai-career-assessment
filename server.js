@@ -63,7 +63,7 @@ app.get("/api/admin/stats", requireAdmin, async (req, res) => {
 
     const { data, error } = await supabase
       .from("assessment_records")
-      .select("consent_type, total_score, created_at");
+      .select("consent_type, total_score, created_at, job_matches");
 
     if (error) {
       console.error("读取后台统计失败：", error.message);
@@ -110,15 +110,46 @@ app.get("/api/admin/stats", requireAdmin, async (req, res) => {
       .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
       .slice(-7)
       .map(([date, count]) => ({ date, count }));
+    
+    // 统计各职业方向在匹配结果中的出现次数
+    const jobCounts = {};
 
-    return res.json({
-      success: true,
-      totalCount: records.length,
-      identifiedCount,
-      anonymousCount,
-      averageScore,
-      dailyTrend
+    records.forEach(item => {
+      let matches = item.job_matches;
+
+      if (typeof matches === "string") {
+        try {
+          matches = JSON.parse(matches);
+        } catch {
+          matches = [];
+        }
+      }
+
+      if (!Array.isArray(matches)) return;
+
+      matches.forEach(job => {
+        if (!job || typeof job.name !== "string" || !job.name.trim()) {
+          return;
+        }
+
+        const name = job.name.trim();
+        jobCounts[name] = (jobCounts[name] || 0) + 1;
+      });
     });
+
+    const jobDistribution = Object.entries(jobCounts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, count]) => ({ name, count }));
+
+return res.json({
+  success: true,
+  totalCount: records.length,
+  identifiedCount,
+  anonymousCount,
+  averageScore,
+  dailyTrend,
+  jobDistribution
+});
   } catch (error) {
     console.error("后台统计接口异常：", error.message);
 

@@ -30,7 +30,28 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-app.get("/api/admin/stats", async (req, res) => {
+function requireAdmin(req, res, next) {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  const providedPassword = req.get("x-admin-password");
+
+  if (!adminPassword) {
+    return res.status(503).json({
+      success: false,
+      message: "管理员密码尚未配置"
+    });
+  }
+
+  if (providedPassword !== adminPassword) {
+    return res.status(401).json({
+      success: false,
+      message: "管理员身份验证失败"
+    });
+  }
+
+  next();
+}
+
+app.get("/api/admin/stats", requireAdmin, async (req, res) => {
   try {
     if (!supabase) {
       return res.status(503).json({

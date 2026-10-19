@@ -181,7 +181,7 @@ app.get("/api/admin/records", requireAdmin, async (req, res) => {
 
     const { data, error } = await supabase
       .from("assessment_records")
-      .select("id, created_at, consent_type, total_score, dimension_scores, job_matches, ai_analysis")
+      .select("id, created_at, consent_type, participant_name, total_score, dimension_scores, job_matches, ai_analysis")
       .order("created_at", { ascending: false })
       .limit(100);
 

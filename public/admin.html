@@ -166,6 +166,10 @@
     <div class="card" style="margin-top:20px">
       <h3>后台功能</h3>
       <p style="color:#64748b;font-size:14px;line-height:1.8">
+  导出全部测评记录，可使用 Excel 打开查看。
+</p>
+<button onclick="exportAllRecords()">导出全部测评记录（CSV）</button>
+      <p style="color:#64748b;font-size:14px;line-height:1.8">
         下一阶段将接入真实测评数据，并添加日期筛选、统计图表和报表导出。
         管理员登录及数据访问权限也需要单独配置。
       </p>
@@ -318,6 +322,39 @@ if (rankings.length === 0) {
       message.textContent = "连接服务器失败，请稍后重试";
     }
   }
+  async function exportAllRecords() {
+  const password = prompt("请输入后台管理员密码：");
+  if (!password) return;
+
+  try {
+    const response = await fetch("/api/admin/export", {
+      method: "GET",
+      headers: {
+        "x-admin-password": password
+      }
+    });
+
+    if (!response.ok) {
+      alert("导出失败，请检查管理员密码或稍后重试。");
+      return;
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "assessment_records.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+    alert("全部测评记录已开始下载，可使用 Excel 打开。");
+  } catch (error) {
+    alert("导出失败，请检查网络连接后重试。");
+  }
+}
 </script>
 </body>
 </html>

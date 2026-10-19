@@ -139,12 +139,14 @@
     </div>
 
     <div class="section">
-      <div class="card">
-        <h3>测评数量趋势</h3>
-        <div class="empty">
-          <strong>暂无趋势数据</strong>
-          <span>接入数据库后，将展示每日测评数量变化。</span>
-        </div>
+        
+<div class="card">
+  <h3>每日测评数量趋势</h3>
+  <div id="dailyTrendChart" style="min-height:220px;display:flex;align-items:flex-end;gap:12px;padding:20px 4px 30px;border-bottom:1px solid #e2e8f0;overflow-x:auto">
+    <p style="color:#64748b;font-size:14px">登录后加载每日测评数据</p>
+  </div>
+</div>
+
       </div>
       <div class="card">
         <h3>职业方向分布</h3>
@@ -200,9 +202,33 @@
       const data = await response.json();
 console.log("后台统计数据：", data);
 console.log("每日测评趋势：", data.dailyTrend);
+      
       if (!response.ok || !data.success) {
         message.textContent = data.message || "登录失败，请检查密码";
         return;
+      }
+ // 绘制每日测评趋势柱状图
+      const chart = document.getElementById("dailyTrendChart");
+      const trend = Array.isArray(data.dailyTrend) ? data.dailyTrend : [];
+
+      if (trend.length === 0) {
+        chart.innerHTML = '<p style="color:#64748b;font-size:14px">暂无测评记录，完成测评后这里会显示趋势。</p>';
+      } else {
+        const maxCount = Math.max(...trend.map(item => Number(item.count) || 0), 1);
+
+        chart.innerHTML = trend.map(item => {
+          const count = Number(item.count) || 0;
+          const height = Math.max((count / maxCount) * 150, 4);
+          const dateLabel = String(item.date || "").slice(5);
+
+          return `
+            <div style="min-width:48px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:200px;gap:7px">
+              <span style="font-size:12px;color:#334155">${count}</span>
+              <div style="width: min(36px, 80%);height:${height}px;background:#3b82f6;border-radius:6px 6px 0 0"></div>
+              <span style="font-size:11px;color:#64748b;white-space:nowrap">${dateLabel}</span>
+            </div>
+          `;
+        }).join("");
       }
 
       // 验证通过后才显示真实统计
@@ -220,7 +246,5 @@ console.log("每日测评趋势：", data.dailyTrend);
     }
   }
 </script>
-</body>
-
 </body>
 </html>

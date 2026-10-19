@@ -51,6 +51,7 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+
 app.get("/api/admin/stats", requireAdmin, async (req, res) => {
   try {
     if (!supabase) {
@@ -73,30 +74,55 @@ app.get("/api/admin/stats", requireAdmin, async (req, res) => {
     }
 
     const records = data || [];
+
     const identifiedCount = records.filter(
       item => item.consent_type === "identified"
     ).length;
+
     const anonymousCount = records.filter(
       item => item.consent_type === "anonymous"
     ).length;
+
     const scores = records
       .map(item => item.total_score)
       .filter(score => Number.isFinite(score));
 
     const averageScore = scores.length
-      ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length * 10) / 10
+      ? Math.round(
+          scores.reduce((sum, score) => sum + score, 0) /
+          scores.length * 10
+        ) / 10
       : 0;
 
-    res.json({
+    const dailyCounts = {};
+
+    records.forEach(item => {
+      if (!item.created_at) return;
+
+      const date = new Date(item.created_at)
+        .toISOString()
+        .slice(0, 10);
+
+      dailyCounts[date] = (dailyCounts[date] || 0) + 1;
+    });
+
+    const dailyTrend = Object.entries(dailyCounts)
+      .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+      .slice(-7)
+      .map(([date, count]) => ({ date, count }));
+
+    return res.json({
       success: true,
       totalCount: records.length,
       identifiedCount,
       anonymousCount,
-      averageScore
+      averageScore,
+      dailyTrend
     });
   } catch (error) {
     console.error("后台统计接口异常：", error.message);
-    res.status(500).json({
+
+    return res.status(500).json({
       success: false,
       message: "后台统计接口发生错误"
     });
